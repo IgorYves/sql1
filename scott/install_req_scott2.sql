@@ -30,8 +30,14 @@ select decode(deptno, 10, '****', ename) as ename, job, sal, deptno from emp;
 select ename, job, lpad(' ', sal/100 + 1, '#') as histogramme from emp order by sal desc;
 
 --8
-select ename, trunc(to_date(hiredate), 'month') "debut du mois d'embauche" from emp;
+select ename, trunc(hiredate, 'month') "debut du mois d'embauche" from emp;
 
 --9
+
+
+--10
+select trunc((sum(sal) + sum(comm))/count(*), 2) "salaire moyen" from emp;
+
+--1
 
 
