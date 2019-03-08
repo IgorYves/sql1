@@ -1,59 +1,59 @@
-drop table LigneCommande;
-drop table DetailLivraison;
-drop table Client;
-drop table Livraison;
-drop table Commande;
-drop table Article;
 
-
-
-ALTER SESSION SET NLS_DATE_FORMAT='DD/MM/YYYY HH:MI:SS';
+ALTER SESSION SET NLS_DATE_FORMAT='DD/MM/YYYY HH24:MI:SS';
 
 CREATE TABLE Client
-(noClient 		DECIMAL(4) constraint pk_noClient primary key,
+(noClient 		DECIMAL(4,0) not null,
  nomClient 		VARCHAR(20) not null,
- noTelephone 	VARCHAR(15) not null,
- constraint constr_noClient check (noClient > 0)
+  noTelephone 	VARCHAR(15) not null,
+  constraint pk_noClient primary key (noClient) enable,
+  constraint check_noClient check (noClient > 0) enable
 );
 
 CREATE TABLE Commande
-(noCommande 	DECIMAL(5) not null primary key,
+(noCommande 	DECIMAL(5,0) not null,
  dateCommande	DATE NOT NULL,
- noClient		DECIMAL(4),
- constraint constr_noCommande check (noCommande > 0),
- FOREIGN key (noClient) references Client(noClient) enable
+ noClient		DECIMAL(4,0) not null,
+ constraint pk_noCommande  primary key (noCommande) enable,
+ constraint fk_noClient FOREIGN key (noClient) references Client(noClient) enable,
+ constraint check_noCommande check (noCommande > 0) enable
 );
 
 CREATE TABLE Article
-(noArticle 		DECIMAL(5) not null primary key,
- description 	VARCHAR(20),
+(noArticle 		DECIMAL(5,0) not null,
+ description 	VARCHAR(20) null,
  prixUnitaire 	DECIMAL(10,2) not null,
- quantiteEnStock	DECIMAL(5) DEFAULT 0 not null,
- constraint constr_noArticle check (noArticle > 0),
- constraint constr_quantEnStk check (quantiteEnStock >= 0)
+ quantiteEnStock	DECIMAL(5,0) DEFAULT 0 not null,
+ constraint pk_noArticle  primary key (noArticle) enable,
+ constraint check_noArticle check (noArticle > 0) enable,
+ constraint check_quantEnStk check (quantiteEnStock >= 0) enable
 );
 
 CREATE TABLE LigneCommande
-(noCommande 	DECIMAL(5) not null,
- noArticle 		DECIMAL(5) not null,
- quantite 		DECIMAL(4) not null,
- check (quantite > 0) enable,
- primary KEY (noCommande, noArticle), 
- FOREIGN key (noArticle) references Article(noArticle) enable,
- FOREIGN key (noCommande) references Commande(noCommande) enable
+(noCommande 	DECIMAL(5,0) not null,
+ noArticle 		DECIMAL(5,0) not null,
+ quantite 		DECIMAL(4,0) not null,
+ constraint pk_noCom_noArt  primary key (noCommande, noArticle) enable,
+ constraint fk_noArticle  FOREIGN key (noArticle) references Article(noArticle) enable,
+ constraint fk_noCommande FOREIGN key (noCommande) references Commande(noCommande) enable,
+ constraint check_quantite check (quantite > 0) enable
 );
 
 CREATE TABLE Livraison
-(noLivraison 	DECIMAL(5) not null primary key,
- dateLivraison	DATE NOT NULL
+(noLivraison 	DECIMAL(5,0) not null,
+ dateLivraison	DATE NOT NULL,
+ constraint pk_noLivraison  primary key (noLivraison) enable,
+ constraint check_noLivraison check (noLivraison > 0) enable
 );
 
 CREATE TABLE DetailLivraison
-(noLivraison 	DECIMAL(5) not null,
- noCommande 	DECIMAL(5) not null,
- noArticle 		DECIMAL(5) not null,
- quantiteLivree	DECIMAL(4) not null,
- primary KEY (noCommande, noArticle, noLivraison)
+(noLivraison 	DECIMAL(5,0) not null,
+ noCommande 	DECIMAL(5,0) not null,
+ noArticle 		DECIMAL(5,0) not null,
+ quantiteLivree	DECIMAL(4,0) not null,
+ constraint pk_noCom_noArt_noLiv  primary key (noCommande, noArticle, noLivraison) enable,
+ constraint fk_noLivraison FOREIGN key (noLivraison) references Livraison(noLivraison) enable,
+ constraint fk_noCom_noArt FOREIGN key (noCommande, noArticle) references LigneCommande(noCommande, noArticle) enable,
+ constraint check_quantiteLivree check (quantiteLivree > 0) enable
 );
 
 

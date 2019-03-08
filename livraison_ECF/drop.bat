@@ -24,7 +24,7 @@ if (%ORACLE_HOME%) == () goto nooraclehome
 set SOURCE=.
 
 REM - lancement de SQL*Plus en mode ligne avec le script 
-%ORACLE_HOME%\bin\SQLPLUS livraison @"%SOURCE%\drop_livraison.sql"
+%ORACLE_HOME%\bin\SQLPLUS livraison2/livraison2 @"%SOURCE%\drop_livraison.sql"
 
 
 :nooraclehome

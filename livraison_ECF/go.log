@@ -1,0 +1,366 @@
+SQL> 
+SQL> -- Pas d'affichage des substitutions de variable
+SQL> SET VERIFY OFF
+SQL> 
+SQL> -- Sortir en cas d'erreur
+SQL> WHENEVER SQLERROR EXIT rollback
+SQL> 
+SQL> -- On garde une trace de la date de la derniere utilisation du script
+SQL> prompt Lancement du script a
+Lancement du script a
+SQL> set heading off
+SQL> select to_char(sysdate,'DD/MM/YYYY HH24:MI:SS') from dual;
+
+08/03/2019 06:14:48                                                             
+
+SQL> set heading on
+SQL> 
+SQL> 
+SQL> @install_livraison
+SQL> 
+SQL> ALTER SESSION SET NLS_DATE_FORMAT='DD/MM/YYYY HH:MI:SS';
+
+Session modifiee.
+
+SQL> 
+SQL> CREATE TABLE Client
+  2  (noClient		     DECIMAL(4,0) not null,
+  3   nomClient 	     VARCHAR(20) not null,
+  4    noTelephone   VARCHAR(15) not null,
+  5    constraint pk_noClient primary key (noClient) enable,
+  6    constraint check_noClient check (noClient > 0) enable
+  7  );
+
+Table creee.
+
+SQL> 
+SQL> CREATE TABLE Commande
+  2  (noCommande     DECIMAL(5,0) not null,
+  3   dateCommande   DATE NOT NULL,
+  4   noClient		     DECIMAL(4,0) not null,
+  5   constraint pk_noCommande	primary key (noCommande) enable,
+  6   constraint fk_noClient FOREIGN key (noClient) references Client(noClient) enable,
+  7   constraint check_noCommande check (noCommande > 0) enable
+  8  );
+
+Table creee.
+
+SQL> 
+SQL> CREATE TABLE Article
+  2  (noArticle 	     DECIMAL(5,0) not null,
+  3   description    VARCHAR(20) null,
+  4   prixUnitaire   DECIMAL(10,2) not null,
+  5   quantiteEnStock	     DECIMAL(5,0) DEFAULT 0 not null,
+  6   constraint pk_noArticle  primary key (noArticle) enable,
+  7   constraint check_noArticle check (noArticle > 0) enable,
+  8   constraint check_quantEnStk check (quantiteEnStock >= 0) enable
+  9  );
+
+Table creee.
+
+SQL> 
+SQL> CREATE TABLE LigneCommande
+  2  (noCommande     DECIMAL(5,0) not null,
+  3   noArticle 	     DECIMAL(5,0) not null,
+  4   quantite		     DECIMAL(4,0) not null,
+  5   constraint pk_noCom_noArt  primary key (noCommande, noArticle) enable,
+  6   constraint fk_noArticle  FOREIGN key (noArticle) references Article(noArticle) enable,
+  7   constraint fk_noCommande FOREIGN key (noCommande) references Commande(noCommande) enable,
+  8   constraint check_quantite check (quantite > 0) enable
+  9  );
+
+Table creee.
+
+SQL> 
+SQL> CREATE TABLE Livraison
+  2  (noLivraison    DECIMAL(5,0) not null,
+  3   dateLivraison  DATE NOT NULL,
+  4   constraint pk_noLivraison  primary key (noLivraison) enable,
+  5   constraint check_noLivraison check (noLivraison > 0) enable
+  6  );
+
+Table creee.
+
+SQL> 
+SQL> CREATE TABLE DetailLivraison
+  2  (noLivraison    DECIMAL(5,0) not null,
+  3   noCommande     DECIMAL(5,0) not null,
+  4   noArticle 	     DECIMAL(5,0) not null,
+  5   quantiteLivree DECIMAL(4,0) not null,
+  6   constraint pk_noCom_noArt_noLiv  primary key (noCommande, noArticle, noLivraison) enable,
+  7   constraint fk_noLivraison FOREIGN key (noLivraison) references Livraison(noLivraison) enable,
+  8   constraint fk_noCom_noArt FOREIGN key (noCommande, noArticle) references LigneCommande(noCommande, noArticle) enable,
+  9   constraint check_quantiteLivree check (quantiteLivree > 0) enable
+ 10  );
+
+Table creee.
+
+SQL> 
+SQL> 
+SQL> 
+SQL> 
+SQL> 
+SQL> prompt
+
+SQL> prompt
+
+SQL> prompt
+
+SQL> Prompt ******************************
+******************************
+SQL> prompt Recapitulatif des Objets créés
+Recapitulatif des Objets créés
+SQL> Prompt ******************************
+******************************
+SQL> select * from user_catalog;
+
+TABLE_NAME                     TABLE_TYPE                                       
+------------------------------ -----------                                      
+CLIENT                         TABLE                                            
+COMMANDE                       TABLE                                            
+ARTICLE                        TABLE                                            
+LIGNECOMMANDE                  TABLE                                            
+LIVRAISON                      TABLE                                            
+DETAILLIVRAISON                TABLE                                            
+
+6 ligne(s) selectionnee(s).
+
+SQL> prompt
+
+SQL> prompt
+
+SQL> prompt
+
+SQL> prompt ************************************
+************************************
+SQL> prompt Recapitulatif des contraintes posées
+Recapitulatif des contraintes posées
+SQL> prompt ************************************
+************************************
+SQL> 
+SQL> column constraint_name format A20
+SQL> column type format A3
+SQL> column table_name format A15
+SQL> column SEARCH_CONDITION format A30
+SQL> 
+SQL> break on type skip
+SQL> compute count of constraint_name on type report
+SQL> select  constraint_name, Constraint_type as type,
+  2  	     table_name , SEARCH_CONDITION, DELETE_RULE, STATUS
+  3  from user_constraints
+  4  order by type, table_name;
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+SYS_C004427          C   ARTICLE         "NOARTICLE" IS NOT NULL                
+          ENABLED                                                               
+                                                                                
+CHECK_NOARTICLE          ARTICLE         noArticle > 0                          
+          ENABLED                                                               
+                                                                                
+SYS_C004429              ARTICLE         "QUANTITEENSTOCK" IS NOT NULL          
+          ENABLED                                                               
+                                                                                
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+SYS_C004428          C   ARTICLE         "PRIXUNITAIRE" IS NOT NULL             
+          ENABLED                                                               
+                                                                                
+CHECK_QUANTENSTK         ARTICLE         quantiteEnStock >= 0                   
+          ENABLED                                                               
+                                                                                
+SYS_C004417              CLIENT          "NOMCLIENT" IS NOT NULL                
+          ENABLED                                                               
+                                                                                
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+CHECK_NOCLIENT       C   CLIENT          noClient > 0                           
+          ENABLED                                                               
+                                                                                
+SYS_C004418              CLIENT          "NOTELEPHONE" IS NOT NULL              
+          ENABLED                                                               
+                                                                                
+SYS_C004416              CLIENT          "NOCLIENT" IS NOT NULL                 
+          ENABLED                                                               
+                                                                                
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+SYS_C004423          C   COMMANDE        "NOCLIENT" IS NOT NULL                 
+          ENABLED                                                               
+                                                                                
+SYS_C004422              COMMANDE        "DATECOMMANDE" IS NOT NULL             
+          ENABLED                                                               
+                                                                                
+SYS_C004421              COMMANDE        "NOCOMMANDE" IS NOT NULL               
+          ENABLED                                                               
+                                                                                
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+CHECK_NOCOMMANDE     C   COMMANDE        noCommande > 0                         
+          ENABLED                                                               
+                                                                                
+SYS_C004444              DETAILLIVRAISON "NOLIVRAISON" IS NOT NULL              
+          ENABLED                                                               
+                                                                                
+SYS_C004445              DETAILLIVRAISON "NOCOMMANDE" IS NOT NULL               
+          ENABLED                                                               
+                                                                                
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+CHECK_QUANTITELIVREE C   DETAILLIVRAISON quantiteLivree > 0                     
+          ENABLED                                                               
+                                                                                
+SYS_C004446              DETAILLIVRAISON "NOARTICLE" IS NOT NULL                
+          ENABLED                                                               
+                                                                                
+SYS_C004447              DETAILLIVRAISON "QUANTITELIVREE" IS NOT NULL           
+          ENABLED                                                               
+                                                                                
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+SYS_C004433          C   LIGNECOMMANDE   "NOCOMMANDE" IS NOT NULL               
+          ENABLED                                                               
+                                                                                
+SYS_C004435              LIGNECOMMANDE   "QUANTITE" IS NOT NULL                 
+          ENABLED                                                               
+                                                                                
+CHECK_QUANTITE           LIGNECOMMANDE   quantite > 0                           
+          ENABLED                                                               
+                                                                                
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+SYS_C004434          C   LIGNECOMMANDE   "NOARTICLE" IS NOT NULL                
+          ENABLED                                                               
+                                                                                
+SYS_C004440              LIVRAISON       "NOLIVRAISON" IS NOT NULL              
+          ENABLED                                                               
+                                                                                
+SYS_C004441              LIVRAISON       "DATELIVRAISON" IS NOT NULL            
+          ENABLED                                                               
+                                                                                
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+CHECK_NOLIVRAISON    C   LIVRAISON       noLivraison > 0                        
+          ENABLED                                                               
+                                                                                
+-------------------- ***                                                        
+                                                                                
+                                                                                
+                  25 cou                                                        
+                                                                                
+                                                                                
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+PK_NOARTICLE         P   ARTICLE                                                
+          ENABLED                                                               
+                                                                                
+PK_NOCLIENT              CLIENT                                                 
+          ENABLED                                                               
+                                                                                
+PK_NOCOMMANDE            COMMANDE                                               
+          ENABLED                                                               
+                                                                                
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+PK_NOCOM_NOART_NOLIV P   DETAILLIVRAISON                                        
+          ENABLED                                                               
+                                                                                
+PK_NOCOM_NOART           LIGNECOMMANDE                                          
+          ENABLED                                                               
+                                                                                
+PK_NOLIVRAISON           LIVRAISON                                              
+          ENABLED                                                               
+                                                                                
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+-------------------- ***                                                        
+                                                                                
+                                                                                
+                   6 cou                                                        
+                                                                                
+                                                                                
+FK_NOCLIENT          R   COMMANDE                                               
+NO ACTION ENABLED                                                               
+                                                                                
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+FK_NOLIVRAISON       R   DETAILLIVRAISON                                        
+NO ACTION ENABLED                                                               
+                                                                                
+FK_NOCOM_NOART           DETAILLIVRAISON                                        
+NO ACTION ENABLED                                                               
+                                                                                
+FK_NOARTICLE             LIGNECOMMANDE                                          
+NO ACTION ENABLED                                                               
+                                                                                
+
+CONSTRAINT_NAME      TYP TABLE_NAME      SEARCH_CONDITION                       
+-------------------- --- --------------- ------------------------------         
+DELETE_RU STATUS                                                                
+--------- --------                                                              
+FK_NOCOMMANDE        R   LIGNECOMMANDE                                          
+NO ACTION ENABLED                                                               
+                                                                                
+-------------------- ***                                                        
+                                                                                
+                                                                                
+                   5 cou                                                        
+                                                                                
+                                                                                
+
+36 ligne(s) selectionnee(s).
+
+SQL> 
+SQL> 
+SQL> clear columns
+SQL> clear breaks
+SQL> clear computes
+SQL> @install_data_livraison
+SP2-0310: impossible d'ouvrir le fichier "install_data_livraison.sql"
+SQL> @req_livraison
+SP2-0310: impossible d'ouvrir le fichier "req_livraison.sql"
+SQL> 
+SQL> 
+SQL> PROMPT	FIN NORMALE DU SCRIPT
+FIN NORMALE DU SCRIPT
+SQL> 
+SQL> -- Comportement par d�faut
+SQL> spool off
